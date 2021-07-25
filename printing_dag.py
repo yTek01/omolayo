@@ -9,11 +9,14 @@ except Exception as e:
     print("Error {}".format(e))
     
     
-def first_function_execute():
-    print("Hello world ")
+def first_function_execute(**context):
+    print('first_function_execute ')    
+    context['ti'].xcon_push(key='mkey', value='first_function_execute says Hello ')
     
-    return "Hello World"
-
+def second_function_execute(**context):
+    instance = context.get("ti").xcon_pull(key='mkey')
+    print("I am in the second_function_execute got value : {} from function 1".format(instance))
+    
 with DAG(
     dag_id="initial_dag", 
     schedule_interval="@daily",
@@ -26,4 +29,14 @@ with DAG(
     catchup=False) as f:
     
     first_function_execute = PythonOperator(
-        task_id="first_function_execute", python_callable=first_function_execute)
+        task_id="first_function_execute", python_callable=first_function_execute, 
+        provide_context=True,
+        op_kwargs={"name":"Olasehinde Omolayo"}
+        )
+    
+    second_function_execute = PythonOperator(
+        task_id="second_function_execute", python_callable=second_function_execute, 
+        provide_context=True
+        )
+    
+    first_function_execute >> second_function_execute
